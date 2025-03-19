@@ -7,9 +7,14 @@ interface PaginationProps {
   onPageChange: (offset: number) => void;
 }
 
-const Pagination: React.FC<PaginationProps> = ({ offset, limit, total, onPageChange }) => {
+const Pagination: React.FC<PaginationProps> = ({
+  offset,
+  limit,
+  total,
+  onPageChange,
+}) => {
   if (total <= 0 || limit <= 0) {
-    return null; 
+    return null;
   }
 
   const totalPages = Math.ceil(total / limit);
@@ -24,17 +29,12 @@ const Pagination: React.FC<PaginationProps> = ({ offset, limit, total, onPageCha
       >
         Previous
       </button>
-      {Array.from({ length: totalPages }, (_, i) => (
-        <button
-          key={i}
-          onClick={() => onPageChange(i * limit)}
-          className={`px-4 py-2 mx-1 ${
-            currentPage === i + 1 ? "bg-blue-500 text-white" : "bg-gray-200"
-          } rounded-lg hover:bg-blue-600 hover:text-white transition-colors`}
-        >
-          {i + 1}
-        </button>
-      ))}
+      <span
+        className="px-4 py-2 mx-1 bg-gray-200 rounded-lg text-center font-medium text-gray-800"
+        style={{ lineHeight: "2rem" }}
+      >
+        {currentPage}
+      </span>
       <button
         onClick={() => onPageChange(offset + limit)}
         disabled={offset + limit >= total}

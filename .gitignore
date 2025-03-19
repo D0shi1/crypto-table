@@ -21,3 +21,5 @@ yarn-error.log*
 *.tmp
 
 dist/
+
+*storybook.log

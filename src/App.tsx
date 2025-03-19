@@ -25,7 +25,7 @@ const App: React.FC = () => {
       setPortfolio(
         JSON.parse(savedPortfolio).map((coin: PortfolioCoin) => ({
           ...coin,
-          priceUsd: parseFloat(coin.priceUsd.toString()), 
+          priceUsd: parseFloat(coin.priceUsd.toString()),
         }))
       );
     }
@@ -39,13 +39,12 @@ const App: React.FC = () => {
       prevPortfolio.map((coin) => {
         const updatedPrice = updatedPrices[coin.id];
         if (updatedPrice) {
-          return { ...coin, priceUsd: parseFloat(updatedPrice) }; 
+          return { ...coin, priceUsd: parseFloat(updatedPrice) };
         }
         return coin;
       })
     );
   });
-  
 
   const filteredCoins = useMemo(() => {
     if (!coins) return [];
@@ -92,7 +91,7 @@ const App: React.FC = () => {
       supply,
       maxSupply,
     } = coin;
-    const currentPrice = parseFloat(priceUsd); 
+    const currentPrice = parseFloat(priceUsd);
     const amountToAdd = 1;
 
     const updatedPortfolio = [...portfolio];
@@ -109,7 +108,7 @@ const App: React.FC = () => {
         id,
         name,
         symbol,
-        priceUsd: currentPrice, 
+        priceUsd: currentPrice,
         marketCapUsd: marketCapUsd || "0",
         changePercent24Hr: changePercent24Hr || "0",
         rank: rank || "0",
@@ -135,7 +134,16 @@ const App: React.FC = () => {
 
   const isEmptyResults = filteredCoins.length === 0 && search !== "";
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading)
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+        <div
+          className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-opacity-75 border-solid"
+          role="status"
+        ></div>
+        <p className="mt-4 text-lg font-semibold text-gray-600">Loading...</p>
+      </div>
+    );
 
   return (
     <Router>
