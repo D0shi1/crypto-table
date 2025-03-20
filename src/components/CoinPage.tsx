@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Coin } from "../hooks/useCoins";
 import PriceChart from "./PriceChart";
+import websocketManager from "./websocketManager"; 
 
 const CoinPage: React.FC = () => {
   const { id } = useParams();
@@ -75,31 +76,24 @@ const CoinPage: React.FC = () => {
   }, [id, timeRange]);
 
   useEffect(() => {
-    const ws = new WebSocket("wss://ws.coincap.io/prices?assets=ALL");
-
-    ws.onmessage = (event) => {
-      try {
-        const updatedPrices = JSON.parse(event.data);
-        if (updatedPrices[id!]) {
-          setCoin((prevCoin) => {
-            if (!prevCoin) return null;
-            return {
-              ...prevCoin,
-              priceUsd: updatedPrices[id!] || prevCoin.priceUsd,
-            };
-          });
-        }
-      } catch (error) {
-        console.error("Error processing WebSocket message:", error);
+    const handleMessage = (updatedPrices: Record<string, string>) => {
+      if (updatedPrices[id!]) {
+        setCoin((prevCoin) => {
+          if (!prevCoin) return null;
+          return {
+            ...prevCoin,
+            priceUsd: updatedPrices[id!] || prevCoin.priceUsd,
+          };
+        });
       }
     };
 
-    ws.onclose = () => {
-      console.log("WebSocket disconnected.");
-    };
+    websocketManager.connect();
+
+    websocketManager.addMessageHandler(handleMessage);
 
     return () => {
-      ws.close();
+      websocketManager.removeMessageHandler(handleMessage);
     };
   }, [id]);
 

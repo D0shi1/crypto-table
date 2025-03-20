@@ -4,11 +4,19 @@ import Header from "./Header";
 import { PortfolioCoin } from "../types/types";
 
 const meta: Meta<typeof Header> = {
-  title: "Components/Header", // Название истории в интерфейсе Storybook
-  component: Header, // Компонент, для которого создаётся история
+  title: "Components/Header",
+  component: Header,
 };
 
-export default meta; // Корректный экспорт meta
+export interface HeaderProps {
+  portfolio: PortfolioCoin[];
+  setPortfolio: (
+    portfolio: PortfolioCoin[] | ((prev: PortfolioCoin[]) => PortfolioCoin[])
+  ) => void;
+}
+
+
+export default meta;
 
 type Story = StoryObj<typeof Header>;
 
@@ -44,9 +52,16 @@ const mockPortfolio: PortfolioCoin[] = [
   },
 ];
 
-const handleSetPortfolio = (updatedPortfolio: PortfolioCoin[]) => {
-  console.log("Updated Portfolio:", updatedPortfolio);
+const handleSetPortfolio: HeaderProps["setPortfolio"] = (portfolio) => {
+  if (typeof portfolio === "function") {
+    console.log("Updating portfolio with a function.");
+    const updatedPortfolio = portfolio(mockPortfolio);
+    console.log("Updated Portfolio:", updatedPortfolio);
+  } else {
+    console.log("Updating portfolio with a value:", portfolio);
+  }
 };
+
 
 export const Default: Story = {
   args: {
@@ -54,3 +69,5 @@ export const Default: Story = {
     setPortfolio: handleSetPortfolio,
   },
 };
+
+

@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
 import PortfolioModal from "./PortfolioModal";
 import { PortfolioCoin } from "../types/types";
+import websocketManager from "./websocketManager";
 
 interface HeaderProps {
   portfolio: PortfolioCoin[];
-  setPortfolio: (portfolio: PortfolioCoin[]) => void;
+  setPortfolio: (
+    portfolio: PortfolioCoin[] | ((prev: PortfolioCoin[]) => PortfolioCoin[])
+  ) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ portfolio, setPortfolio }) => {
@@ -32,8 +35,7 @@ const Header: React.FC<HeaderProps> = ({ portfolio, setPortfolio }) => {
 
         const coinDifference = coin.purchases.reduce((diff, purchase) => {
           return (
-            diff +
-            (currentPrice - purchase.priceOnPurchase) * purchase.amount
+            diff + (currentPrice - purchase.priceOnPurchase) * purchase.amount
           );
         }, 0);
 
@@ -84,6 +86,37 @@ const Header: React.FC<HeaderProps> = ({ portfolio, setPortfolio }) => {
 
     fetchTopCoins();
   }, []);
+
+  useEffect(() => {
+    const handleMessage = (updatedPrices: Record<string, string>) => {
+      setPortfolio((prevPortfolio: PortfolioCoin[]) =>
+        prevPortfolio.map((coin: PortfolioCoin) => {
+          const updatedPrice = updatedPrices[coin.id];
+          if (updatedPrice) {
+            return { ...coin, priceUsd: parseFloat(updatedPrice) };
+          }
+          return coin;
+        })
+      );
+      setTopCoins((prevTopCoins) =>
+        prevTopCoins.map((coin) => {
+          const updatedPrice = updatedPrices[coin.id];
+          if (updatedPrice) {
+            return { ...coin, priceUsd: parseFloat(updatedPrice) };
+          }
+          return coin;
+        })
+      );
+    };
+
+    websocketManager.connect();
+
+    websocketManager.addMessageHandler(handleMessage);
+
+    return () => {
+      websocketManager.removeMessageHandler(handleMessage);
+    };
+  }, [setPortfolio]);
 
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);

@@ -1,12 +1,11 @@
 import React from "react";
 import Header from "./Header";
 import { Outlet } from "react-router-dom";
-
 import { PortfolioCoin } from "../types/types";
 
 interface LayoutProps {
   portfolio: PortfolioCoin[];
-  setPortfolio: (portfolio: PortfolioCoin[]) => void;
+  setPortfolio: React.Dispatch<React.SetStateAction<PortfolioCoin[]>>; 
 }
 
 const Layout: React.FC<LayoutProps> = ({ portfolio, setPortfolio }) => {

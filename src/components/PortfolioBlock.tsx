@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import PortfolioModal from "./PortfolioModal";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import websocketManager from "./websocketManager"; 
 
 interface Coin {
   id: string;
@@ -11,7 +12,7 @@ interface Coin {
 }
 
 const PortfolioBlock: React.FC = () => {
-  const [portfolio, setPortfolio] = useState<any[]>([]); 
+  const [portfolio, setPortfolio] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
@@ -27,20 +28,22 @@ const PortfolioBlock: React.FC = () => {
         setPortfolio(portfolio);
       }
 
-      const ws = new WebSocket("wss://ws.coincap.io/prices?assets=ALL");
-
-      ws.onmessage = (event) => {
-        const updatedPrices = JSON.parse(event.data);
+      const handleMessage = (updatedPrices: Record<string, string>) => {
         setPortfolio((prevPortfolio) =>
           prevPortfolio.map((coin) => ({
             ...coin,
-            priceUsd: updatedPrices[coin.id] || coin.priceUsd, 
+            priceUsd: updatedPrices[coin.id] || coin.priceUsd,
           }))
         );
-
-        console.log("Updated prices from WebSocket:", updatedPrices);
       };
-      return () => ws.close(); 
+
+      websocketManager.connect();
+
+      websocketManager.addMessageHandler(handleMessage);
+
+      return () => {
+        websocketManager.removeMessageHandler(handleMessage);
+      };
     }
   }, [isModalOpen]);
 
@@ -84,7 +87,7 @@ const PortfolioBlock: React.FC = () => {
         amount: amountToAdd,
         priceOnPurchase: currentPrice,
       });
-      portfolio[coinIndex].amount += amountToAdd; 
+      portfolio[coinIndex].amount += amountToAdd;
     } else {
       portfolio.push({
         id,

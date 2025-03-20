@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Coin } from "../hooks/useCoins";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import websocketManager from "./websocketManager";
 
 interface CoinTableProps {
   coins: Coin[];
@@ -107,12 +108,12 @@ export const CoinTable: React.FC<CoinTableProps> = ({
                 </td>
                 <td
                   className={`px-10 py-4 ${
-                    parseFloat(coin.changePercent24Hr) > 0
+                    parseFloat(coin.changePercent24Hr || "0") > 0
                       ? "text-green-600"
                       : "text-red-600"
                   }`}
                 >
-                  {parseFloat(coin.changePercent24Hr).toFixed(2)}%
+                  {parseFloat(coin.changePercent24Hr || "0").toFixed(2)}%
                 </td>
                 <td className="px-10 py-4">
                   <button

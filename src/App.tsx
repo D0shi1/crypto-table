@@ -1,13 +1,13 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Layout from "./components/Layout"; // Изменено на использование Layout
+import Layout from "./components/Layout";
 import { useCoins, Coin as BaseCoin } from "./hooks/useCoins";
 import { CoinTable } from "./components/CoinTable";
 import SearchBar from "./components/SearchBar";
 import Pagination from "./components/Pagination";
-import useCoinWebSocket from "./hooks/useCoinWebSocket";
 import CoinPage from "./components/CoinPage";
 import { PortfolioCoin } from "./types/types";
+import websocketManager from "../src/components/websocketManager";
 
 const App: React.FC = () => {
   const [offset, setOffset] = useState(0);
@@ -34,17 +34,27 @@ const App: React.FC = () => {
   const { data: coinsData, isLoading } = useCoins(offset, limit, "");
   const { data: coins, total } = coinsData || { data: [], total: 0 };
 
-  useCoinWebSocket((updatedPrices) => {
-    setPortfolio((prevPortfolio) =>
-      prevPortfolio.map((coin) => {
-        const updatedPrice = updatedPrices[coin.id];
-        if (updatedPrice) {
-          return { ...coin, priceUsd: parseFloat(updatedPrice) };
-        }
-        return coin;
-      })
-    );
-  });
+  useEffect(() => {
+    const handleMessage = (updatedPrices: Record<string, string>) => {
+      setPortfolio((prevPortfolio) =>
+        prevPortfolio.map((coin) => {
+          const updatedPrice = updatedPrices[coin.id];
+          if (updatedPrice) {
+            return { ...coin, priceUsd: parseFloat(updatedPrice) };
+          }
+          return coin;
+        })
+      );
+    };
+
+    websocketManager.connect();
+
+    websocketManager.addMessageHandler(handleMessage);
+
+    return () => {
+      websocketManager.removeMessageHandler(handleMessage);
+    };
+  }, []);
 
   const filteredCoins = useMemo(() => {
     if (!coins) return [];
