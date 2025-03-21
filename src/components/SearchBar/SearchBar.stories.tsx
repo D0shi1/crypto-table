@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Meta, StoryObj } from "@storybook/react";
 import SearchBar from "./SearchBar";
-import CoinTable from "./CoinTable";
+import CoinTable from "../CoinTable/CoinTable";
 import { MemoryRouter } from "react-router-dom";
 
 const meta: Meta<typeof SearchBar> = {
@@ -95,7 +95,9 @@ const SearchBarWithTableTemplate = () => {
         <p className="text-red-500 mt-4">No results found.</p>
       ) : (
         <CoinTable
-          coins={filteredCoins}
+          offset={0}
+          limit={10}
+          search={search}
           onAddCoin={handleAddCoin}
           sortBy={null}
           sortOrder="asc"

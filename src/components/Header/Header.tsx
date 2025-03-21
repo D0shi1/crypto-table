@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import PortfolioModal from "./PortfolioModal";
-import { PortfolioCoin } from "../types/types";
-import websocketManager from "./websocketManager";
+import PortfolioModal from "../Portfolio/PortfolioModal";
+import { PortfolioCoin } from "../../types/types";
+import websocketManager from "../../utils/websocketManager";
 
 interface HeaderProps {
   portfolio: PortfolioCoin[];

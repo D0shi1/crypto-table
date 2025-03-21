@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Coin } from "../hooks/useCoins";
-import PriceChart from "./PriceChart";
-import websocketManager from "./websocketManager"; 
+import { Coin } from "../../hooks/useCoins";
+import PriceChart from "../PriceChart/PriceChart";
+import websocketManager from "../../utils/websocketManager";
 
 const CoinPage: React.FC = () => {
   const { id } = useParams();

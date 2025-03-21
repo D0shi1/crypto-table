@@ -17,7 +17,7 @@ const useCoinWebSocket = (
 
       ws.onmessage = (event) => {
         try {
-          const updatedPrices = JSON.parse(event.data); 
+          const updatedPrices = JSON.parse(event.data);
 
           queryClient.setQueryData<{ data: Coin[]; total?: number }>(
             ["coins"],

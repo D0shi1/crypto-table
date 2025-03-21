@@ -96,14 +96,6 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
           {totalPriceDifference.toFixed(2)}
         </p>
 
-        <p
-          className={`text-lg font-semibold ${
-            percentChange >= 0 ? "text-green-500" : "text-red-500"
-          }`}
-        >
-          Percent Change: {percentChange.toFixed(2)}%
-        </p>
-
         {coins.length > 0 ? (
           <ul className="divide-y">
             {coins.map((coin) => {

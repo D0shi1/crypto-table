@@ -1,17 +1,17 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Layout from "./components/Layout";
+import Layout from "./components/Layout/Layout";
 import { useCoins, Coin as BaseCoin } from "./hooks/useCoins";
-import { CoinTable } from "./components/CoinTable";
-import SearchBar from "./components/SearchBar";
-import Pagination from "./components/Pagination";
-import CoinPage from "./components/CoinPage";
+import { CoinTable } from "./components/CoinTable/CoinTable";
+import SearchBar from "./components/SearchBar/SearchBar";
+import Pagination from "./components/Pagination/Pagination";
+import CoinPage from "./components/CoinPage/CoinPage";
 import { PortfolioCoin } from "./types/types";
-import websocketManager from "../src/components/websocketManager";
+import websocketManager from "./utils/websocketManager";
 
 const App: React.FC = () => {
   const [offset, setOffset] = useState(0);
-  const [limit, setLimit] = useState(8);
+  const [limit] = useState(8);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<
     "price" | "marketCap" | "change24h" | null
@@ -180,7 +180,9 @@ const App: React.FC = () => {
                   ) : (
                     <>
                       <CoinTable
-                        coins={sortedCoins}
+                        offset={offset}
+                        limit={limit}
+                        search={search}
                         onAddCoin={handleAddCoin}
                         sortBy={sortBy}
                         sortOrder={sortOrder}

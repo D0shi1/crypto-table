@@ -1,5 +1,5 @@
 import { Meta, StoryObj } from "@storybook/react";
-import PortfolioModal from "./PortfolioModal";
+import PortfolioModal from "../Portfolio/PortfolioModal";
 
 const meta: Meta<typeof PortfolioModal> = {
   title: "Components/PortfolioModal",

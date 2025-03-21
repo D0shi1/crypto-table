@@ -1,7 +1,7 @@
 import React from "react";
 import { Meta, StoryObj } from "@storybook/react";
 import Header from "./Header";
-import { PortfolioCoin } from "../types/types";
+import { PortfolioCoin } from "../../types/types";
 
 const meta: Meta<typeof Header> = {
   title: "Components/Header",
@@ -14,7 +14,6 @@ export interface HeaderProps {
     portfolio: PortfolioCoin[] | ((prev: PortfolioCoin[]) => PortfolioCoin[])
   ) => void;
 }
-
 
 export default meta;
 
@@ -62,12 +61,9 @@ const handleSetPortfolio: HeaderProps["setPortfolio"] = (portfolio) => {
   }
 };
 
-
 export const Default: Story = {
   args: {
     portfolio: mockPortfolio,
     setPortfolio: handleSetPortfolio,
   },
 };
-
-

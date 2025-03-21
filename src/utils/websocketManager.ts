@@ -4,18 +4,18 @@ class WebSocketManager {
   private ws: WebSocket | null = null;
   private messageHandlers: MessageHandler[] = [];
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5; 
+  private maxReconnectAttempts = 5;
   private reconnectInterval = 10000;
 
   constructor(private url: string) {}
 
   connect() {
-    if (this.ws) return; 
+    if (this.ws) return;
 
     this.ws = new WebSocket(this.url);
 
     this.ws.onopen = () => {
-      this.reconnectAttempts = 0; 
+      this.reconnectAttempts = 0;
     };
 
     this.ws.onmessage = (event) => {
@@ -34,7 +34,7 @@ class WebSocketManager {
     this.ws.onclose = () => {
       console.log("WebSocket disconnected");
       this.ws = null;
-      this.reconnect(); 
+      this.reconnect();
     };
   }
 

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import PortfolioModal from "./PortfolioModal";
+import PortfolioModal from "../Portfolio/PortfolioModal";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import websocketManager from "./websocketManager"; 
+import websocketManager from "../../utils/websocketManager";
 
 interface Coin {
   id: string;

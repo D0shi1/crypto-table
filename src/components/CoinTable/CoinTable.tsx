@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Coin } from "../hooks/useCoins";
+import { Coin } from "../../hooks/useCoins";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import websocketManager from "./websocketManager";
+import websocketManager from "../../utils/websocketManager";
+import { useMemo } from "react";
 
 interface CoinTableProps {
-  coins: Coin[];
+  offset: number;
+  limit: number;
+  search: string;
   onAddCoin: (coin: Coin) => void;
   sortBy: "price" | "marketCap" | "change24h" | null;
   sortOrder: "asc" | "desc";
@@ -14,13 +17,55 @@ interface CoinTableProps {
 }
 
 export const CoinTable: React.FC<CoinTableProps> = ({
-  coins,
+  offset,
+  limit,
+  search,
   onAddCoin,
   sortBy,
   sortOrder,
   onSortChange,
 }) => {
   const navigate = useNavigate();
+  const [coins, setCoins] = useState<Coin[]>([]);
+
+  useEffect(() => {
+    const fetchCoins = async () => {
+      try {
+        const response = await fetch(
+          `https://api.coincap.io/v2/assets?offset=${offset}&limit=${limit}&search=${search}`
+        );
+        if (!response.ok) throw new Error("Failed to fetch coins");
+
+        const result = await response.json();
+        setCoins(result.data);
+      } catch (error) {
+        console.error("Error fetching coins:", error);
+      }
+    };
+
+    fetchCoins();
+  }, [offset, limit, search]);
+
+  useEffect(() => {
+    const handleMessage = (updatedPrices: Record<string, string>) => {
+      setCoins((prevCoins) =>
+        prevCoins.map((coin) => {
+          const updatedPrice = updatedPrices[coin.id];
+          if (updatedPrice) {
+            return { ...coin, priceUsd: updatedPrice };
+          }
+          return coin;
+        })
+      );
+    };
+
+    websocketManager.connect();
+    websocketManager.addMessageHandler(handleMessage);
+
+    return () => {
+      websocketManager.removeMessageHandler(handleMessage);
+    };
+  }, []);
 
   const formatNumber = (value: string) => {
     const num = parseFloat(value);
@@ -29,6 +74,28 @@ export const CoinTable: React.FC<CoinTableProps> = ({
     if (num >= 1e3) return `${(num / 1e3).toFixed(2)}K`;
     return num.toFixed(2);
   };
+
+  const sortedCoins = useMemo(() => {
+    if (!coins) return []; 
+    return [...coins].sort((a, b) => {
+      if (sortBy === "price") {
+        return sortOrder === "asc"
+          ? parseFloat(a.priceUsd) - parseFloat(b.priceUsd)
+          : parseFloat(b.priceUsd) - parseFloat(a.priceUsd);
+      }
+      if (sortBy === "marketCap") {
+        return sortOrder === "asc"
+          ? parseFloat(a.marketCapUsd) - parseFloat(b.marketCapUsd)
+          : parseFloat(b.marketCapUsd) - parseFloat(a.marketCapUsd);
+      }
+      if (sortBy === "change24h") {
+        return sortOrder === "asc"
+          ? parseFloat(a.changePercent24Hr) - parseFloat(b.changePercent24Hr)
+          : parseFloat(b.changePercent24Hr) - parseFloat(a.changePercent24Hr);
+      }
+      return 0;
+    });
+  }, [coins, sortBy, sortOrder]);
 
   return (
     <>
@@ -80,7 +147,7 @@ export const CoinTable: React.FC<CoinTableProps> = ({
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
-          {coins.map((coin) => {
+          {sortedCoins.map((coin) => {
             const logoUrl = `https://assets.coincap.io/assets/icons/${coin.symbol.toLowerCase()}@2x.png`;
             return (
               <tr

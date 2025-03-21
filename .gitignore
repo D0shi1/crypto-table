@@ -22,4 +22,9 @@ yarn-error.log*
 
 dist/
 
+test-results/
+
+
 *storybook.log
+
+.vercel
