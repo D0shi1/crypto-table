@@ -58,6 +58,65 @@ const Header: React.FC<HeaderProps> = ({ portfolio, setPortfolio }) => {
     setIsModalOpen(!isModalOpen);
   };
 
+  const handleAddCoin = (coin: PortfolioCoin) => {
+    setPortfolio((prevPortfolio) => {
+      const existingCoin = prevPortfolio.find((c) => c.id === coin.id);
+      let updatedPortfolio;
+
+      if (existingCoin) {
+        updatedPortfolio = prevPortfolio.map((c) =>
+          c.id === coin.id
+            ? {
+                ...c,
+                amount: c.amount + 1,
+                purchases: [
+                  ...c.purchases,
+                  { amount: 1, priceOnPurchase: coin.priceUsd },
+                ],
+              }
+            : c
+        );
+      } else {
+        updatedPortfolio = [
+          ...prevPortfolio,
+          {
+            ...coin,
+            amount: 1,
+            purchases: [{ amount: 1, priceOnPurchase: coin.priceUsd }],
+          },
+        ];
+      }
+
+      localStorage.setItem("portfolio", JSON.stringify(updatedPortfolio));
+      return updatedPortfolio;
+    });
+  };
+
+  const handleRemoveCoin = (id: string, amountToRemove: number) => {
+    setPortfolio((prevPortfolio) => {
+      const updatedPortfolio = prevPortfolio
+        .map((coin) => {
+          if (coin.id === id) {
+            const newAmount = coin.amount - amountToRemove;
+            if (newAmount > 0) {
+              return {
+                ...coin,
+                amount: newAmount,
+                purchases: coin.purchases.slice(0, -amountToRemove),
+              };
+            } else {
+              return null;
+            }
+          }
+          return coin;
+        })
+        .filter((coin): coin is PortfolioCoin => coin !== null);
+
+      localStorage.setItem("portfolio", JSON.stringify(updatedPortfolio));
+      return updatedPortfolio;
+    });
+  };
+
   return (
     <header className="bg-gray-800 p-3 text-white">
       <div className="flex flex-col md:flex-row items-center justify-between w-full">
@@ -79,7 +138,7 @@ const Header: React.FC<HeaderProps> = ({ portfolio, setPortfolio }) => {
           ))}
         </div>
 
-        <div className="flex items-center space-x-4 mt-4 md:mt-0">
+        <div className="flex items-center space-x-4 mt-4 md:mt-0 ml-auto">
           <div className="text-right">
             <p className="text-lg font-bold">Total: ${totalValue.toFixed(2)}</p>
             <p
@@ -125,8 +184,8 @@ const Header: React.FC<HeaderProps> = ({ portfolio, setPortfolio }) => {
         <PortfolioModal
           coins={portfolio}
           onClose={toggleModal}
-          onRemoveCoin={() => {}}
-          onAddCoin={() => {}}
+          onRemoveCoin={handleRemoveCoin}
+          onAddCoin={handleAddCoin}
         />
       )}
     </header>

@@ -42,7 +42,7 @@ export const CoinTable: React.FC<CoinTableProps> = ({
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-hidden overflow-x-auto"> {}
         <table className="w-full bg-white shadow-md rounded-lg overflow-hidden">
           <thead className="bg-gray-50">
             <tr>

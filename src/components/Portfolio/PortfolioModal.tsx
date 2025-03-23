@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import "react-toastify/dist/ReactToastify.css";
 
 interface Coin {
   id: string;
@@ -18,22 +17,33 @@ interface PortfolioModalProps {
 }
 
 const PortfolioModal: React.FC<PortfolioModalProps> = ({
-  coins,
+  coins: initialCoins,
   onClose,
   onRemoveCoin,
   onAddCoin,
 }) => {
+  const [localCoins, setLocalCoins] = useState<Coin[]>(initialCoins);
   const [amounts, setAmounts] = useState<{ [key: string]: number }>({});
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const initialAmounts = coins.reduce((acc, coin) => {
+    const initialAmounts = localCoins.reduce((acc, coin) => {
       acc[coin.id] = coin.amount;
       return acc;
     }, {} as { [key: string]: number });
 
     setAmounts(initialAmounts);
-  }, [coins]);
+  }, [localCoins]);
+
+  const handleChangeAmount = (id: string, value: string) => {
+    const amount = parseInt(value, 10);
+    if (!isNaN(amount) && amount >= 0) {
+      setAmounts((prev) => ({
+        ...prev,
+        [id]: amount,
+      }));
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -52,44 +62,58 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
     };
   }, [onClose]);
 
-  const handleChangeAmount = (id: string, value: string) => {
-    const amount = parseInt(value, 10);
-    if (!isNaN(amount) && amount >= 0) {
-      setAmounts((prev) => ({
-        ...prev,
-        [id]: amount,
-      }));
-    }
-  };
-
   const incrementAmount = (id: string) => {
-    const coin = coins.find((c) => c.id === id);
+    const coin = localCoins.find((c) => c.id === id);
     if (coin) {
+      const updatedCoins = localCoins.map((c) =>
+        c.id === id
+          ? {
+              ...c,
+              amount: c.amount + 1,
+              purchases: [
+                ...c.purchases,
+                { amount: 1, priceOnPurchase: coin.priceUsd },
+              ],
+            }
+          : c
+      );
+      setLocalCoins(updatedCoins);
       onAddCoin(coin);
-      setAmounts((prev) => ({
-        ...prev,
-        [id]: (prev[id] || 0) + 1,
-      }));
     }
   };
 
   const decrementAmount = (id: string) => {
-    const amountToRemove = amounts[id] || 0;
-    if (amountToRemove > 0) {
+    const coin = localCoins.find((c) => c.id === id);
+    if (coin && coin.amount > 0) {
+      const updatedCoins = localCoins
+        .map((c) => {
+          if (c.id === id) {
+            const newAmount = c.amount - 1;
+            if (newAmount > 0) {
+              return {
+                ...c,
+                amount: newAmount,
+                purchases: c.purchases.slice(0, -1),
+              };
+            } else {
+              return null;
+            }
+          }
+          return c;
+        })
+        .filter((c): c is Coin => c !== null);
+
+      setLocalCoins(updatedCoins);
       onRemoveCoin(id, 1);
-      setAmounts((prev) => ({
-        ...prev,
-        [id]: Math.max((prev[id] || 0) - 1, 0),
-      }));
     }
   };
 
-  const totalPortfolioValue = coins.reduce((total, coin) => {
+  const totalPortfolioValue = localCoins.reduce((total, coin) => {
     const priceUsd = parseFloat(coin.priceUsd.toString()) || 0;
     return total + coin.amount * priceUsd;
   }, 0);
 
-  const totalPriceDifference = coins.reduce((total, coin) => {
+  const totalPriceDifference = localCoins.reduce((total, coin) => {
     const currentPrice = parseFloat(coin.priceUsd.toString()) || 0;
     const coinDifference = coin.purchases.reduce((diff, purchase) => {
       const purchasePrice = purchase.priceOnPurchase;
@@ -99,22 +123,6 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
 
     return total + coinDifference;
   }, 0);
-
-  const initialPortfolioValue = coins.reduce((total, coin) => {
-    return (
-      total +
-      coin.purchases.reduce(
-        (subTotal, purchase) =>
-          subTotal + purchase.priceOnPurchase * purchase.amount,
-        0
-      )
-    );
-  }, 0);
-
-  const percentChange =
-    initialPortfolioValue > 0
-      ? (totalPriceDifference / initialPortfolioValue) * 100
-      : 0;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -137,11 +145,10 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
           {totalPriceDifference.toFixed(2)}
         </p>
 
-        {}
         <div className="overflow-y-auto flex-1">
-          {coins.length > 0 ? (
+          {localCoins.length > 0 ? (
             <ul className="divide-y">
-              {coins.map((coin) => {
+              {localCoins.map((coin) => {
                 const currentPrice = parseFloat(coin.priceUsd.toString());
                 const purchasePrice = coin.purchases[0]?.priceOnPurchase || 0;
                 const percentChangeForCoin =
@@ -160,7 +167,8 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
                         alt={`${coin.name} logo`}
                         className="h-8 w-8 rounded-full"
                         onError={(e) => {
-                          e.currentTarget.src = "https://via.placeholder.com/32";
+                          e.currentTarget.src =
+                            "https://via.placeholder.com/32";
                         }}
                       />
                       <div>
@@ -192,7 +200,7 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
                     </div>
                     <div className="flex items-center space-x-1">
                       <button
-                        className="text-black text-2xl px-5 py-3 rounded-lg "
+                        className="text-black text-2xl px-5 py-3 rounded-lg"
                         onClick={() => decrementAmount(coin.id)}
                       >
                         -
@@ -207,7 +215,7 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
                         className="w-16 text-center bg-transparent focus:outline-none text-black appearance-none [appearance:textfield] [&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden"
                       />
                       <button
-                        className="text-black text-2xl px-5 py-3 rounded-lg "
+                        className="text-black text-2xl px-5 py-3 rounded-lg"
                         onClick={() => incrementAmount(coin.id)}
                       >
                         +
