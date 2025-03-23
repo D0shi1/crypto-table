@@ -38,7 +38,6 @@ export const useCoins = (offset: number, limit: number, search: string) => {
   });
 };
 export interface PortfolioCoin extends Coin {
-  priceOnPurchase: number; 
-  amount: number; 
+  priceOnPurchase: number;
+  amount: number;
 }
-

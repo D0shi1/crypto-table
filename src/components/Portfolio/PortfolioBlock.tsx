@@ -4,14 +4,13 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import websocketManager from "../../utils/websocketManager";
 
-// Интерфейс Coin
 interface Coin {
   id: string;
   name: string;
   symbol: string;
   priceUsd: number;
   amount: number;
-  purchases: { amount: number; priceOnPurchase: number }[]; // purchases теперь обязательное
+  purchases: { amount: number; priceOnPurchase: number }[]; 
 }
 
 const PortfolioBlock: React.FC = () => {
@@ -27,7 +26,7 @@ const PortfolioBlock: React.FC = () => {
           priceUsd: parseFloat(coin.priceUsd) || 0,
           priceOnPurchase: parseFloat(coin.priceOnPurchase) || 0,
           amount: parseInt(coin.amount, 10) || 0,
-          purchases: coin.purchases || [], // Добавляем purchases, если их нет
+          purchases: coin.purchases || [], 
         }));
         setPortfolio(portfolio);
       }
@@ -59,7 +58,7 @@ const PortfolioBlock: React.FC = () => {
         }
         return coin;
       })
-      .filter((coin): coin is Coin => coin !== null); // Убедитесь, что null удалены
+      .filter((coin): coin is Coin => coin !== null);
 
     setPortfolio(updatedPortfolio);
     localStorage.setItem("portfolio", JSON.stringify(updatedPortfolio));
@@ -76,7 +75,7 @@ const PortfolioBlock: React.FC = () => {
 
   const handleAddCoin = (coin: Coin) => {
     const { id, priceUsd, name, symbol } = coin;
-    const currentPrice = priceUsd; // priceUsd уже число, не нужно parseFloat
+    const currentPrice = priceUsd;
     const amountToAdd = 1;
 
     const savedPortfolio = localStorage.getItem("portfolio");
@@ -96,9 +95,9 @@ const PortfolioBlock: React.FC = () => {
         id,
         name,
         symbol,
-        priceUsd: currentPrice, // Используем число
+        priceUsd: currentPrice,
         amount: amountToAdd,
-        purchases: [{ amount: amountToAdd, priceOnPurchase: currentPrice }], // purchases обязательно
+        purchases: [{ amount: amountToAdd, priceOnPurchase: currentPrice }],
       });
     }
 
@@ -129,7 +128,7 @@ const PortfolioBlock: React.FC = () => {
           coins={portfolio}
           onClose={() => setIsModalOpen(false)}
           onRemoveCoin={handleRemoveCoin}
-          onAddCoin={handleAddCoin} // Передаем handleAddCoin
+          onAddCoin={handleAddCoin}
         />
       )}
 
