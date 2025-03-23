@@ -6,6 +6,7 @@ import { CoinTable } from "./components/CoinTable/CoinTable";
 import SearchBar from "./components/SearchBar/SearchBar";
 import Pagination from "./components/Pagination/Pagination";
 import CoinPage from "./components/CoinPage/CoinPage";
+import NotFoundPage from "./components/NotFoundPage/NotFoundPage";
 import { PortfolioCoin } from "./types/types";
 import websocketManager from "./utils/websocketManager";
 
@@ -103,10 +104,10 @@ const App: React.FC = () => {
     } = coin;
     const currentPrice = parseFloat(priceUsd);
     const amountToAdd = 1;
-
+  
     const updatedPortfolio = [...portfolio];
     const coinIndex = updatedPortfolio.findIndex((c) => c.id === id);
-
+  
     if (coinIndex !== -1) {
       updatedPortfolio[coinIndex].purchases.push({
         amount: amountToAdd,
@@ -119,16 +120,16 @@ const App: React.FC = () => {
         name,
         symbol,
         priceUsd: currentPrice,
-        marketCapUsd: marketCapUsd || "0",
-        changePercent24Hr: changePercent24Hr || "0",
-        rank: rank || "0",
-        supply: supply || "0",
-        maxSupply: maxSupply || "0",
+        marketCapUsd: parseFloat(marketCapUsd || "0"),
+        changePercent24Hr: parseFloat(changePercent24Hr || "0"),
+        rank: parseFloat(rank || "0"),
+        supply: parseFloat(supply || "0"),
+        maxSupply: parseFloat(maxSupply || "0"),
         amount: amountToAdd,
         purchases: [{ amount: amountToAdd, priceOnPurchase: currentPrice }],
       });
     }
-
+  
     localStorage.setItem("portfolio", JSON.stringify(updatedPortfolio));
     setPortfolio(updatedPortfolio);
   };
@@ -200,6 +201,7 @@ const App: React.FC = () => {
               }
             />
             <Route path="/coin/:id" element={<CoinPage />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>
       </div>

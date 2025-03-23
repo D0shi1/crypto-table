@@ -5,7 +5,7 @@ import { PortfolioCoin } from "../../types/types";
 
 interface LayoutProps {
   portfolio: PortfolioCoin[];
-  setPortfolio: React.Dispatch<React.SetStateAction<PortfolioCoin[]>>;
+  setPortfolio: (portfolio: PortfolioCoin[] | ((prev: PortfolioCoin[]) => PortfolioCoin[])) => void;
 }
 
 const Layout: React.FC<LayoutProps> = ({ portfolio, setPortfolio }) => {

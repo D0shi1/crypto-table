@@ -1,7 +1,27 @@
 import React, { useState, useEffect } from "react";
 import PortfolioModal from "../Portfolio/PortfolioModal";
-import { PortfolioCoin } from "../../types/types";
-import websocketManager from "../../utils/websocketManager";
+import {
+  calculateTotalValue,
+  calculateDifference,
+  calculateInitialValue,
+  calculatePercentageChange,
+  fetchTopCoins,
+  useWebSocket,
+} from "../../utils/headerFunction";
+
+interface PortfolioCoin {
+  id: string;
+  name: string;
+  symbol: string;
+  priceUsd: number;
+  amount: number;
+  purchases: { amount: number; priceOnPurchase: number }[];
+  marketCapUsd?: number;
+  changePercent24Hr?: number;
+  rank?: number;
+  supply?: number;
+  maxSupply?: number;
+}
 
 interface HeaderProps {
   portfolio: PortfolioCoin[];
@@ -15,48 +35,13 @@ const Header: React.FC<HeaderProps> = ({ portfolio, setPortfolio }) => {
   const [difference, setDifference] = useState(0);
   const [percentageChange, setPercentageChange] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [topCoins, setTopCoins] = useState<any[]>([]);
+  const [topCoins, setTopCoins] = useState<PortfolioCoin[]>([]);
 
   useEffect(() => {
-    const calculateTotalValue = () => {
-      return portfolio.reduce(
-        (total, coin) => total + coin.priceUsd * coin.amount,
-        0
-      );
-    };
-
-    const calculateDifference = () => {
-      return portfolio.reduce((totalDiff, coin) => {
-        const currentPrice = coin.priceUsd;
-
-        if (!coin.purchases || coin.purchases.length === 0) {
-          return totalDiff;
-        }
-
-        const coinDifference = coin.purchases.reduce((diff, purchase) => {
-          return (
-            diff + (currentPrice - purchase.priceOnPurchase) * purchase.amount
-          );
-        }, 0);
-
-        return totalDiff + coinDifference;
-      }, 0);
-    };
-
-    const total = calculateTotalValue();
-    const diff = calculateDifference();
-    const initialValue = portfolio.reduce((total, coin) => {
-      return (
-        total +
-        coin.purchases.reduce(
-          (subTotal, purchase) =>
-            subTotal + purchase.priceOnPurchase * purchase.amount,
-          0
-        )
-      );
-    }, 0);
-
-    const percentChange = initialValue > 0 ? (diff / initialValue) * 100 : 0;
+    const total = calculateTotalValue(portfolio);
+    const diff = calculateDifference(portfolio);
+    const initialValue = calculateInitialValue(portfolio);
+    const percentChange = calculatePercentageChange(diff, initialValue);
 
     setTotalValue(total);
     setDifference(diff);
@@ -64,94 +49,19 @@ const Header: React.FC<HeaderProps> = ({ portfolio, setPortfolio }) => {
   }, [portfolio]);
 
   useEffect(() => {
-    const fetchTopCoins = async () => {
-      try {
-        const response = await fetch("https://api.coincap.io/v2/assets");
-        const result = await response.json();
-        if (!Array.isArray(result.data)) {
-          throw new Error("Unexpected API response format");
-        }
-
-        const topCoins = result.data.slice(0, 3).map((coin: any) => ({
-          id: coin.id,
-          name: coin.name,
-          symbol: coin.symbol,
-          priceUsd: parseFloat(coin.priceUsd),
-        }));
-        setTopCoins(topCoins);
-      } catch (error) {
-        console.error("Error fetching top coins:", error);
-      }
-    };
-
-    fetchTopCoins();
+    fetchTopCoins(setTopCoins);
   }, []);
 
-  useEffect(() => {
-    const handleMessage = (updatedPrices: Record<string, string>) => {
-      setPortfolio((prevPortfolio: PortfolioCoin[]) =>
-        prevPortfolio.map((coin: PortfolioCoin) => {
-          const updatedPrice = updatedPrices[coin.id];
-          if (updatedPrice) {
-            return { ...coin, priceUsd: parseFloat(updatedPrice) };
-          }
-          return coin;
-        })
-      );
-      setTopCoins((prevTopCoins) =>
-        prevTopCoins.map((coin) => {
-          const updatedPrice = updatedPrices[coin.id];
-          if (updatedPrice) {
-            return { ...coin, priceUsd: parseFloat(updatedPrice) };
-          }
-          return coin;
-        })
-      );
-    };
-
-    websocketManager.connect();
-
-    websocketManager.addMessageHandler(handleMessage);
-
-    return () => {
-      websocketManager.removeMessageHandler(handleMessage);
-    };
-  }, [setPortfolio]);
+  useWebSocket(setPortfolio, setTopCoins);
 
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
   };
 
-  const handleRemoveCoin = (id: string, amountToRemove: number) => {
-    const updatedPortfolio = portfolio
-      .map((coin) => {
-        if (coin.id === id) {
-          const updatedAmount = coin.amount - amountToRemove;
-          if (updatedAmount <= 0) return null;
-          return {
-            ...coin,
-            amount: updatedAmount,
-            purchases: coin.purchases.filter((purchase) => {
-              if (purchase.amount > amountToRemove) {
-                return true;
-              }
-              amountToRemove -= purchase.amount;
-              return false;
-            }),
-          };
-        }
-        return coin;
-      })
-      .filter(Boolean) as PortfolioCoin[];
-
-    setPortfolio(updatedPortfolio);
-    localStorage.setItem("portfolio", JSON.stringify(updatedPortfolio));
-  };
-
   return (
     <header className="bg-gray-800 p-3 text-white">
-      <div className="flex items-center justify-between w-full">
-        <div className="flex items-center space-x-6">
+      <div className="flex flex-col md:flex-row items-center justify-between w-full">
+        <div className="flex flex-row space-x-4 md:space-x-6">
           {topCoins.map((coin) => (
             <div key={coin.id} className="flex items-center space-x-2">
               <img
@@ -159,9 +69,8 @@ const Header: React.FC<HeaderProps> = ({ portfolio, setPortfolio }) => {
                 alt={`${coin.name} logo`}
                 className="w-6 h-6"
               />
-              <div className="text-left">
-                <p className="text-sm font-medium">{coin.name}</p>
-                <p className="text-xs text-gray-300">{coin.symbol}</p>
+              <div className="flex items-center space-x-1">
+                <p className="text-sm font-semibold">{coin.symbol}</p>
                 <p className="text-sm font-semibold">
                   ${coin.priceUsd.toFixed(2)}
                 </p>
@@ -169,7 +78,8 @@ const Header: React.FC<HeaderProps> = ({ portfolio, setPortfolio }) => {
             </div>
           ))}
         </div>
-        <div className="flex items-center space-x-4 ml-auto">
+
+        <div className="flex items-center space-x-4 mt-4 md:mt-0">
           <div className="text-right">
             <p className="text-lg font-bold">Total: ${totalValue.toFixed(2)}</p>
             <p
@@ -183,17 +93,19 @@ const Header: React.FC<HeaderProps> = ({ portfolio, setPortfolio }) => {
           </div>
           <button
             onClick={toggleModal}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors z-index-50"
+            className="hidden md:block px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
             Open Portfolio
           </button>
         </div>
       </div>
+
       {isModalOpen && (
         <PortfolioModal
           coins={portfolio}
           onClose={toggleModal}
-          onRemoveCoin={handleRemoveCoin}
+          onRemoveCoin={() => {}}
+          onAddCoin={() => {}}
         />
       )}
     </header>

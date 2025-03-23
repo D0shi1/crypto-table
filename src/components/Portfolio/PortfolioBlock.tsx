@@ -4,15 +4,18 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import websocketManager from "../../utils/websocketManager";
 
+// Интерфейс Coin
 interface Coin {
   id: string;
   name: string;
   symbol: string;
-  priceUsd: string;
+  priceUsd: number;
+  amount: number;
+  purchases: { amount: number; priceOnPurchase: number }[]; // purchases теперь обязательное
 }
 
 const PortfolioBlock: React.FC = () => {
-  const [portfolio, setPortfolio] = useState<any[]>([]);
+  const [portfolio, setPortfolio] = useState<Coin[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
@@ -24,6 +27,7 @@ const PortfolioBlock: React.FC = () => {
           priceUsd: parseFloat(coin.priceUsd) || 0,
           priceOnPurchase: parseFloat(coin.priceOnPurchase) || 0,
           amount: parseInt(coin.amount, 10) || 0,
+          purchases: coin.purchases || [], // Добавляем purchases, если их нет
         }));
         setPortfolio(portfolio);
       }
@@ -32,13 +36,12 @@ const PortfolioBlock: React.FC = () => {
         setPortfolio((prevPortfolio) =>
           prevPortfolio.map((coin) => ({
             ...coin,
-            priceUsd: updatedPrices[coin.id] || coin.priceUsd,
+            priceUsd: parseFloat(updatedPrices[coin.id]) || coin.priceUsd,
           }))
         );
       };
 
       websocketManager.connect();
-
       websocketManager.addMessageHandler(handleMessage);
 
       return () => {
@@ -56,7 +59,7 @@ const PortfolioBlock: React.FC = () => {
         }
         return coin;
       })
-      .filter(Boolean);
+      .filter((coin): coin is Coin => coin !== null); // Убедитесь, что null удалены
 
     setPortfolio(updatedPortfolio);
     localStorage.setItem("portfolio", JSON.stringify(updatedPortfolio));
@@ -73,7 +76,7 @@ const PortfolioBlock: React.FC = () => {
 
   const handleAddCoin = (coin: Coin) => {
     const { id, priceUsd, name, symbol } = coin;
-    const currentPrice = parseFloat(priceUsd);
+    const currentPrice = priceUsd; // priceUsd уже число, не нужно parseFloat
     const amountToAdd = 1;
 
     const savedPortfolio = localStorage.getItem("portfolio");
@@ -93,9 +96,9 @@ const PortfolioBlock: React.FC = () => {
         id,
         name,
         symbol,
-        priceUsd: currentPrice,
+        priceUsd: currentPrice, // Используем число
         amount: amountToAdd,
-        purchases: [{ amount: amountToAdd, priceOnPurchase: currentPrice }],
+        purchases: [{ amount: amountToAdd, priceOnPurchase: currentPrice }], // purchases обязательно
       });
     }
 
@@ -126,6 +129,7 @@ const PortfolioBlock: React.FC = () => {
           coins={portfolio}
           onClose={() => setIsModalOpen(false)}
           onRemoveCoin={handleRemoveCoin}
+          onAddCoin={handleAddCoin} // Передаем handleAddCoin
         />
       )}
 

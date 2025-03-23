@@ -1,7 +1,20 @@
 import React from "react";
 import { Meta, StoryObj } from "@storybook/react";
 import Header from "./Header";
-import { PortfolioCoin } from "../../types/types";
+
+interface PortfolioCoin {
+  id: string;
+  name: string;
+  symbol: string;
+  priceUsd: number;
+  amount: number;
+  purchases: { amount: number; priceOnPurchase: number }[];
+  marketCapUsd?: number;
+  changePercent24Hr?: number;
+  rank?: number;
+  supply?: number;
+  maxSupply?: number;
+}
 
 const meta: Meta<typeof Header> = {
   title: "Components/Header",
@@ -25,11 +38,11 @@ const mockPortfolio: PortfolioCoin[] = [
     name: "Bitcoin",
     symbol: "BTC",
     priceUsd: 29000,
-    marketCapUsd: "563400000000",
-    changePercent24Hr: "2.34",
-    rank: "1",
-    supply: "19300000",
-    maxSupply: "21000000",
+    marketCapUsd: 563400000000,
+    changePercent24Hr: 2.34,
+    rank: 1,
+    supply: 19300000,
+    maxSupply: 21000000,
     amount: 1.5,
     purchases: [
       { amount: 1, priceOnPurchase: 28000 },
@@ -41,11 +54,11 @@ const mockPortfolio: PortfolioCoin[] = [
     name: "Ethereum",
     symbol: "ETH",
     priceUsd: 1800,
-    marketCapUsd: "234600000000",
-    changePercent24Hr: "-1.21",
-    rank: "2",
-    supply: "120000000",
-    maxSupply: "null",
+    marketCapUsd: 234600000000,
+    changePercent24Hr: -1.21,
+    rank: 2,
+    supply: 120000000,
+    maxSupply: 12341243,
     amount: 2,
     purchases: [{ amount: 2, priceOnPurchase: 1700 }],
   },
