@@ -91,6 +91,27 @@ const Header: React.FC<HeaderProps> = ({ portfolio, setPortfolio }) => {
               {difference.toFixed(2)} ({percentageChange.toFixed(2)}%)
             </p>
           </div>
+
+          <button
+            onClick={toggleModal}
+            className="md:hidden flex items-center p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+              />
+            </svg>
+          </button>
+
           <button
             onClick={toggleModal}
             className="hidden md:block px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
